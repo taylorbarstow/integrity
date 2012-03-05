@@ -1,3 +1,5 @@
+require 'cgi'
+
 module Integrity
   class App < Sinatra::Base
     set     :root, File.expand_path("../../..", __FILE__)
@@ -194,16 +196,26 @@ module Integrity
       end
     end
 
-    get "/:project/builds/:build/artifacts/:artifact" do |project, id, artifact|
+    get "/:project/builds/:build/artifacts/:artifact" do |project, build, artifact|
       login_required unless current_project.public?
       
-      unless current_project.artifacts_empty? or File.exists?(artifact)
-        if artifact.include? "%2F"
-          artifact.gsub!(/(\%2F)/, "/")
-        end
-        send_file "#{Integrity.config.directory}/#{id}/#{artifact}",
-                  :filename => "#{File.basename(artifact)}"
+      artifact = CGI.unescape(artifact)
+      
+      artifact_files = current_build.artifact_files
+      file = artifact_files.detect do |file|
+        file[:relative_path] == artifact
       end
+      
+      if file.nil?
+        halt 404
+      end
+      
+      fs_path = current_build.build_directory.join(file[:relative_path])
+      unless File.exist?(fs_path)
+        halt 404
+      end
+
+      send_file fs_path, :filename => file[:name]
     end
     
     get "/:project/builds/:build" do
