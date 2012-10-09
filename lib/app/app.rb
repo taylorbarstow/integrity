@@ -1,4 +1,5 @@
 require "app/helpers"
+require 'cgi'
 
 module Integrity
   class App < Sinatra::Base
@@ -182,6 +183,28 @@ module Integrity
 
       @build = current_project.build_head
       redirect build_url(@build).to_s
+    end
+
+    get "/:project/builds/:build/artifacts/:artifact" do |project, build, artifact|
+      login_required unless current_project.public?
+
+      artifact = CGI.unescape(artifact)
+
+      artifact_files = current_build.artifact_files
+      file = artifact_files.detect do |file|
+        file[:relative_path] == artifact
+      end
+
+      if file.nil?
+        halt 404
+      end
+
+      fs_path = current_build.build_directory.join(file[:relative_path])
+      unless File.exist?(fs_path)
+        halt 404
+      end
+
+      send_file fs_path, :filename => file[:name]
     end
 
     get "/:project/builds/:build" do
