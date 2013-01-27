@@ -19,7 +19,7 @@ module Integrity
       @logger.debug(command)
 
       output = ""
-      rd, wr = IO.pipe
+      rd, wr = IO.pipe('utf-8')
       with_clean_env do
         if pid = fork
           # parent
