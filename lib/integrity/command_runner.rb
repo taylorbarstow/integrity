@@ -19,7 +19,13 @@ module Integrity
       @logger.debug(command)
 
       output = ""
-      rd, wr = IO.pipe('utf-8')
+      if ''.respond_to?(:encoding)
+        # ruby 1.9
+        rd, wr = IO.pipe('utf-8')
+      else
+        # ruby 1.8
+        rd, wr = IO.pipe
+      end
       with_clean_env do
         if pid = fork
           # parent
