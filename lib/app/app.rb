@@ -43,6 +43,12 @@ module Integrity
       ).to_s
     end
 
+    post "/build" do
+      login_required
+      @build = current_project.build_head
+      redirect build_url(@build).to_s
+    end
+
     get "/?" do
       @projects = authorized? ? Project.all : Project.all(:public => true)
 
@@ -123,7 +129,7 @@ module Integrity
     get "/:project\.json" do
       @format = :json
       login_required unless current_project.public?
-      
+
       json current_project
     end
 
