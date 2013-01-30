@@ -45,8 +45,21 @@ module Integrity
 
     post "/build" do
       login_required
-      @build = current_project.build_head
-      redirect build_url(@build).to_s
+      json find_projects.map &:build_head
+      # @project = Project.find(:permalink => params[:project])
+      # @build = current_project.build_head
+      # redirect build_url(@build).to_s
+    end
+
+    def find_projects
+      @projects ||= begin
+        find_params = {}
+        find_params[:permalink] = params[:project] if params[:project]
+        find_params[:branch] = params[:branch] if params[:branch]
+        Project.all(find_params)
+      end
+      raise Sinatra::NotFound unless @projects || params[:suppress_errors]
+      @projects
     end
 
     get "/?" do
