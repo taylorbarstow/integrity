@@ -45,10 +45,7 @@ module Integrity
 
     post "/build" do
       login_required
-      json find_projects.map &:build_head
-      # @project = Project.find(:permalink => params[:project])
-      # @build = current_project.build_head
-      # redirect build_url(@build).to_s
+      json find_projects.map(&:build_head).map {|build| build_url(build).to_s}
     end
 
     def find_projects
